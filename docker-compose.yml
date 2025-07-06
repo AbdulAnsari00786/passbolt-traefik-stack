@@ -1,0 +1,73 @@
+version: '3.7'
+
+services:
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: r00tp@$$
+      MYSQL_DATABASE: passbolt
+      MYSQL_USER: passbolt_rw
+      MYSQL_PASSWORD: p@$$b0lt
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - passbolt-net
+
+  passbolt:
+    image: passbolt/passbolt
+    container_name: passbolt
+    restart: always
+    environment:
+      DATASOURCES_DEFAULT_HOST: mariadb
+      DATASOURCES_DEFAULT_USERNAME: passbolt_rw
+      DATASOURCES_DEFAULT_PASSWORD: p@$$b0lt
+      DATASOURCES_DEFAULT_DATABASE: passbolt
+      APP_FULL_BASE_URL: https://passbolt.rage00786.com:2443
+    labels:
+    - "traefik.enable=true"
+
+  # HTTPS (2443)
+    - "traefik.http.routers.passbolt.rule=Host(`passbolt.rage00786.com`)"
+    - "traefik.http.routers.passbolt.entrypoints=websecure"
+    - "traefik.http.routers.passbolt.tls.certresolver=letsencrypt"
+    - "traefik.http.routers.passbolt.service=passbolt"
+    - "traefik.http.services.passbolt.loadbalancer.server.port=80"
+
+  # HTTP (2080) - optional
+    - "traefik.http.routers.passbolt-http.rule=Host(`passbolt.rage00786.com`)"
+    - "traefik.http.routers.passbolt-http.entrypoints=web"
+    - "traefik.http.routers.passbolt-http.service=passbolt"
+    - "traefik.http.services.passbolt-http.loadbalancer.server.port=80"
+    networks:
+      - passbolt-net
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=dnnansari@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - passbolt-net
+
+volumes:
+  mariadb_data:
+  traefik_letsencrypt:
+
+networks:
+  passbolt-net:
+    driver: bridge
