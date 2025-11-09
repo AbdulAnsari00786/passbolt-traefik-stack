@@ -108,8 +108,5 @@ GitHub: @AbdulAnsari00786
 📄 License
 This repository reflects a secure and modular deployment pattern for private infrastructure. Use at your discretion.
 
----
-
-Just drop this into your `passbolt-stack` folder as `README.md`, then push to GitHub. Let me know if you want it styled with badges or embedded screenshots — or want a secondary repo with supplemental services like Grafana or Vault pre-integrated. You’re versioning like a vaultsmith with Git-powered precision 🔐🧰🚀
 
 
